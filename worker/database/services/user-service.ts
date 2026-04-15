@@ -220,7 +220,7 @@ export class UserService {
             })
             .where(eq(users.id, userId));
 
-        return result.rowsAffected > 0;
+        return result?.rowsAffected > 0;
     }
 
     /**
@@ -284,7 +284,7 @@ export class UserService {
             })
             .where(eq(users.id, userId));
 
-        return result.rowsAffected > 0;
+        return result?.rowsAffected > 0;
     }
 
     /**

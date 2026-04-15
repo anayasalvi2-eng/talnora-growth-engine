@@ -65,7 +65,7 @@ function AuthDemo() {
                             <p>ID: {user.id}</p>
                             <p>Email: {user.email}</p>
                             <p>Display Name: {user.displayName}</p>
-                            {user.username && <p>Username: @{user.username}</p>}
+                            {user?.username && <p>Username: @{user?.username}</p>}
                         </div>
                     </div>
                     <Button onClick={logout} variant="outline" className="w-full">
@@ -152,7 +152,7 @@ function ItemsDemo() {
         setError(null);
 
         try {
-            const response = await api.listItems({ limit: 10 });
+            const response = await api?.listItems({ limit: 10 });
             if (response.success && response.data) {
                 setItems(response.data);
             } else {
@@ -171,7 +171,7 @@ function ItemsDemo() {
         setError(null);
 
         try {
-            const response = await api.createItem({ title: newTitle, status: 'active' });
+            const response = await api?.createItem({ title: newTitle, status: 'active' });
             if (response.success && response.data) {
                 setItems([response.data, ...items]);
                 setNewTitle('');
@@ -190,7 +190,7 @@ function ItemsDemo() {
         setError(null);
 
         try {
-            const response = await api.deleteItem(id);
+            const response = await api?.deleteItem(id);
             if (response.success) {
                 setItems(items.filter((item) => item.id !== id));
             } else {

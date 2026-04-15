@@ -142,7 +142,7 @@ export class ItemService {
                 )
             );
 
-        return result.rowsAffected > 0;
+        return result?.rowsAffected > 0;
     }
 
     /**
@@ -257,7 +257,7 @@ export class ItemService {
                         eq(items.userId, userId)
                     )
                 );
-            updated += result.rowsAffected;
+            updated += result?.rowsAffected;
         }
 
         return updated;
@@ -279,7 +279,7 @@ export class ItemService {
                         eq(items.userId, userId)
                     )
                 );
-            deleted += result.rowsAffected;
+            deleted += result?.rowsAffected;
         }
 
         return deleted;

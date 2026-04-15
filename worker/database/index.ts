@@ -60,7 +60,7 @@ export class DatabaseService {
     }> {
         const [users, items, sessions] = await Promise.all([
             this.db.select({ count: schema.users.id }).from(schema.users),
-            this.db.select({ count: schema.items.id }).from(schema.items),
+            this.db.select({ count: schema?.items.id }).from(schema?.items),
             this.db.select({ count: schema.sessions.id }).from(schema.sessions),
         ]);
 

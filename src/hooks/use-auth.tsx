@@ -136,7 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Logout
     const logout = useCallback(async (): Promise<void> => {
         try {
-            await api.logout();
+            await api?.logout();
         } finally {
             setState({ user: null, loading: false, error: null });
         }
@@ -147,7 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setState(prev => ({ ...prev, loading: true, error: null }));
 
         try {
-            const response = await api.updateProfile(data);
+            const response = await api?.updateProfile(data);
 
             if (response.success && response.data) {
                 setState(prev => ({
