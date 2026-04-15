@@ -4,6 +4,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { Env } from './core-utils';
+import { userRoutes } from './userRoutes';
 export * from './core-utils';
 
 type UserRoutesModule = { userRoutes: (app: Hono<{ Bindings: Env }>) => void };
@@ -39,6 +40,8 @@ export type ClientErrorReport = { message: string; url: string; timestamp: strin
 
 const app = new Hono<{ Bindings: Env }>();
 
+userRoutes(app);
+
 app.use('*', logger());
 
 app.use('/api/*', cors({ origin: '*', allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], allowHeaders: ['Content-Type', 'Authorization'] }));
@@ -61,24 +64,4 @@ app.onError((err, c) => { console.error(`[ERROR] ${err}`); return c.json({ succe
 
 console.log(`Server is running`)
 
-export default {
-  async fetch(request, env, ctx) {
-    const pathname = new URL(request.url).pathname;
-
-    if (pathname.startsWith('/api/') && pathname !== '/api/health' && pathname !== '/api/client-errors') {
-      await safeLoadUserRoutes(app);
-      if (userRoutesLoadError) {
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: 'Worker routes failed to load',
-            detail: userRoutesLoadError,
-          }),
-          { status: 500, headers: { 'content-type': 'application/json' } },
-        );
-      }
-    }
-
-    return app.fetch(request, env, ctx);
-  },
-} satisfies ExportedHandler<Env>;
+export default { fetch: app.fetch } satisfies ExportedHandler<Env>;

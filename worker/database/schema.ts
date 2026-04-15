@@ -1,152 +1,114 @@
 /**
  * Database Schema - Drizzle ORM with D1
- *
- * This schema provides a production-ready foundation similar to Lovable's Supabase integration.
- * Includes users, sessions, and a sample items table for demonstration.
- *
- * To generate migrations: npx drizzle-kit generate
- * To apply migrations: npx drizzle-kit migrate
  */
-
 import { sql } from 'drizzle-orm';
 import { sqliteTable, text, integer, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
-
 // ========================================
-// USERS - Core user identity and authentication
+// USERS
 // ========================================
-
 export const users = sqliteTable('users', {
     id: text('id').primaryKey(),
     email: text('email').notNull().unique(),
     username: text('username').unique(),
     displayName: text('display_name').notNull(),
     avatarUrl: text('avatar_url'),
-
-    // Authentication
-    passwordHash: text('password_hash'), // Bcrypt hashed password
-    provider: text('provider').notNull().default('email'), // 'email', 'github', 'google'
+    passwordHash: text('password_hash'),
+    provider: text('provider').notNull().default('email'),
     providerId: text('provider_id'),
     emailVerified: integer('email_verified', { mode: 'boolean' }).default(false),
-
-    // User preferences
     preferences: text('preferences', { mode: 'json' }).default('{}'),
     theme: text('theme', { enum: ['light', 'dark', 'system'] }).default('system'),
-
-    // Account status
     isActive: integer('is_active', { mode: 'boolean' }).default(true),
-
-    // Security
     failedLoginAttempts: integer('failed_login_attempts').default(0),
     lockedUntil: integer('locked_until', { mode: 'timestamp' }),
-
-    // Timestamps
     createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
     updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
     lastActiveAt: integer('last_active_at', { mode: 'timestamp' }),
 }, (table) => ({
     emailIdx: uniqueIndex('users_email_idx').on(table.email),
     usernameIdx: index('users_username_idx').on(table.username),
-    providerIdx: index('users_provider_idx').on(table.provider, table.providerId),
 }));
-
 // ========================================
-// SESSIONS - JWT session management
+// SESSIONS
 // ========================================
-
 export const sessions = sqliteTable('sessions', {
     id: text('id').primaryKey(),
     userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-
-    // Session metadata
     deviceInfo: text('device_info'),
     userAgent: text('user_agent'),
     ipAddress: text('ip_address'),
-
-    // Token management
     tokenHash: text('token_hash').notNull(),
-
-    // Security
     isRevoked: integer('is_revoked', { mode: 'boolean' }).default(false),
     revokedAt: integer('revoked_at', { mode: 'timestamp' }),
     revokedReason: text('revoked_reason'),
-
-    // Timestamps
     expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
     createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
     lastActivity: integer('last_activity', { mode: 'timestamp' }),
 }, (table) => ({
     userIdIdx: index('sessions_user_id_idx').on(table.userId),
     tokenHashIdx: index('sessions_token_hash_idx').on(table.tokenHash),
-    expiresAtIdx: index('sessions_expires_at_idx').on(table.expiresAt),
 }));
-
 // ========================================
-// ITEMS - Sample CRUD table for demonstration
+// LEADS - CRM Leads from Resume Scorer & Contact Forms
 // ========================================
-
-export const items = sqliteTable('items', {
+export const leads = sqliteTable('leads', {
     id: text('id').primaryKey(),
-    userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-
-    // Item data
-    title: text('title').notNull(),
-    description: text('description'),
-    status: text('status', { enum: ['draft', 'active', 'archived'] }).default('draft'),
-
-    // Metadata
+    email: text('email').notNull(),
+    name: text('name'),
+    source: text('source').notNull().default('manual'), // 'resume_scorer', 'contact_form', 'manual'
+    resumeScore: integer('resume_score'),
+    resumeUrl: text('resume_url'),
+    status: text('status', { enum: ['new', 'contacted', 'qualified', 'converted', 'archived'] }).default('new'),
     metadata: text('metadata', { mode: 'json' }).default('{}'),
-
-    // Timestamps
     createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
     updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
 }, (table) => ({
-    userIdIdx: index('items_user_id_idx').on(table.userId),
-    statusIdx: index('items_status_idx').on(table.status),
-    createdAtIdx: index('items_created_at_idx').on(table.createdAt),
+    emailIdx: index('leads_email_idx').on(table.email),
+    statusIdx: index('leads_status_idx').on(table.status),
+    sourceIdx: index('leads_source_idx').on(table.source),
 }));
-
 // ========================================
-// API KEYS - For programmatic access
+// CONTENT ASSETS - AI Generated Marketing Materials
 // ========================================
-
-export const apiKeys = sqliteTable('api_keys', {
+export const contentAssets = sqliteTable('content_assets', {
     id: text('id').primaryKey(),
     userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-
+    type: text('type', { enum: ['blog', 'linkedin', 'reddit', 'video_script', 'email'] }).notNull(),
+    topic: text('topic').notNull(),
+    content: text('content').notNull(),
+    status: text('status', { enum: ['draft', 'published', 'archived'] }).default('draft'),
+    metadata: text('metadata', { mode: 'json' }).default('{}'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+    userIdIdx: index('content_assets_user_id_idx').on(table.userId),
+    typeIdx: index('content_assets_type_idx').on(table.type),
+    statusIdx: index('content_assets_status_idx').on(table.status),
+}));
+// ========================================
+// CAMPAIGNS - Outreach sequences
+// ========================================
+export const campaigns = sqliteTable('campaigns', {
+    id: text('id').primaryKey(),
+    userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
-    keyHash: text('key_hash').notNull().unique(),
-    keyPreview: text('key_preview').notNull(), // e.g., "sk_...abc123"
-
-    // Scopes and permissions
-    scopes: text('scopes', { mode: 'json' }).default('["read"]'),
-
-    // Usage tracking
-    lastUsed: integer('last_used', { mode: 'timestamp' }),
-    requestCount: integer('request_count').default(0),
-
-    // Status
-    isActive: integer('is_active', { mode: 'boolean' }).default(true),
-    expiresAt: integer('expires_at', { mode: 'timestamp' }),
-
-    // Timestamps
+    status: text('status', { enum: ['draft', 'active', 'paused', 'completed'] }).default('draft'),
+    totalLeads: integer('total_leads').default(0),
+    sentCount: integer('sent_count').default(0),
+    openCount: integer('open_count').default(0),
     createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
 }, (table) => ({
-    userIdIdx: index('api_keys_user_id_idx').on(table.userId),
-    keyHashIdx: uniqueIndex('api_keys_key_hash_idx').on(table.keyHash),
+    userIdIdx: index('campaigns_user_id_idx').on(table.userId),
 }));
-
 // ========================================
-// TYPE EXPORTS - Auto-generated from schema
+// TYPE EXPORTS
 // ========================================
-
 export type User = typeof users.$inferSelect;
-export type NewUser = typeof users.$inferInsert;
-
 export type Session = typeof sessions.$inferSelect;
-export type NewSession = typeof sessions.$inferInsert;
-
-export type Item = typeof items.$inferSelect;
-export type NewItem = typeof items.$inferInsert;
-
-export type ApiKey = typeof apiKeys.$inferSelect;
-export type NewApiKey = typeof apiKeys.$inferInsert;
+export type Lead = typeof leads.$inferSelect;
+export type ContentAsset = typeof contentAssets.$inferSelect;
+export type Campaign = typeof campaigns.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+export type NewLead = typeof leads.$inferInsert;
+export type NewContentAsset = typeof contentAssets.$inferInsert;
+export type NewCampaign = typeof campaigns.$inferInsert;
