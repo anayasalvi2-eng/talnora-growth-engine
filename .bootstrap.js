@@ -77,7 +77,9 @@ function updateWranglerJsonc() {
 }
 
 function runSetupCommands() {
-    const commands = [];
+    const commands = [
+    "bun add react-dropzone@^14.2.3 papaparse@^5.4.1"
+];
     
     if (commands.length === 0) {
         console.log('⊘ No setup commands to run');
