@@ -4,7 +4,9 @@ import {
     createUserService, 
     createContentService, 
     createLeadService, 
-    createCampaignService 
+    createCampaignService,
+    createBlogService,
+    createEventService
 } from './database/services';
 import {
     createSession,
@@ -42,6 +44,20 @@ export function userRoutes(app: Hono<any>) {
     app.get('/api/auth/me', authMiddleware, async (c) => {
         return c.json({ success: true, data: c.get('user') });
     });
+    // Blogs
+    app.get('/api/blogs', async (c) => {
+        const db = createDatabase(c.env.DB);
+        const status = (c.req.query('status') || 'published') as any;
+        const result = await createBlogService(db).list({ status });
+        return c.json({ success: true, ...result });
+    });
+    app.get('/api/blogs/:slug', async (c) => {
+        const slug = c.req.param('slug');
+        const db = createDatabase(c.env.DB);
+        const blog = await createBlogService(db).getBySlug(slug);
+        if (!blog) return c.json({ success: false, error: 'Blog not found' }, 404);
+        return c.json({ success: true, data: blog });
+    });
     // Content
     app.get('/api/content', authMiddleware, async (c) => {
         const user = c.get('user');
@@ -55,7 +71,7 @@ export function userRoutes(app: Hono<any>) {
         const body = await c.req.json();
         const db = createDatabase(c.env.DB);
         const contentService = createContentService(db);
-        const mockContent = `[AI Generated ${body.type.toUpperCase()}]\n\nTopic: ${body.topic}\n\nThis is placeholder content.`;
+        const mockContent = `[AI Generated ${body.type.toUpperCase()}]\n\nTopic: ${body.topic}\n\nThis content is designed for Talnora's automated growth engine.`;
         const asset = await contentService.create(user.id, {
             type: body.type,
             topic: body.topic,
@@ -71,8 +87,9 @@ export function userRoutes(app: Hono<any>) {
         if (!email || !resume) return c.json({ success: false, error: 'Email and resume required' }, 400);
         const db = createDatabase(c.env.DB);
         const leadService = createLeadService(db);
+        const eventService = createEventService(db);
         const score = 70 + Math.floor(Math.random() * 25);
-        await leadService.create({
+        const lead = await leadService.create({
             email,
             name: email.split('@')[0],
             source: 'resume-scorer',
@@ -80,13 +97,19 @@ export function userRoutes(app: Hono<any>) {
             status: 'new',
             metadata: { filename: resume.name }
         });
-        return c.json({ success: true, data: { score, feedback: ["Use more action verbs", "ATS-friendly layout detected"] } });
+        // Trigger event-driven workflow
+        await eventService.logEvent({
+            leadId: lead.id,
+            eventType: 'resume_upload',
+            metadata: { score, filename: resume.name }
+        });
+        return c.json({ success: true, data: { score, feedback: ["Optimized formatting for ATS", "Recommended adding more hard skills"] } });
     });
     // Leads
     app.get('/api/leads', authMiddleware, async (c) => {
         const db = createDatabase(c.env.DB);
-        const status = (c.req.query('status') || '') as any;
-        const result = await createLeadService(db).list({ status: status || undefined });
+        const status = (c.req.query('status') || undefined) as any;
+        const result = await createLeadService(db).list({ status });
         return c.json({ success: true, ...result });
     });
     app.patch('/api/leads/:id', authMiddleware, async (c) => {
@@ -115,11 +138,10 @@ export function userRoutes(app: Hono<any>) {
         const campaign = await createCampaignService(db).create(user.id, body);
         return c.json({ success: true, data: campaign });
     });
-    app.delete('/api/campaigns/:id', authMiddleware, async (c) => {
-        const user = c.get('user');
-        const id = c.req.param('id');
+    // Events
+    app.get('/api/events/recent', authMiddleware, async (c) => {
         const db = createDatabase(c.env.DB);
-        const success = await createCampaignService(db).delete(id, user.id);
-        return c.json({ success });
+        const events = await createEventService(db).getRecentEvents(10);
+        return c.json({ success: true, data: events });
     });
 }

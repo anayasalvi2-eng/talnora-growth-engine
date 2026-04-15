@@ -97,14 +97,44 @@ export const campaigns = sqliteTable('campaigns', {
 }, (table) => ({
   userIdIdx: index('campaigns_user_id_idx').on(table.userId)
 }));
+export const blogs = sqliteTable('blogs', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  slug: text('slug').notNull().unique(),
+  metaDescription: text('meta_description'),
+  content: text('content').notNull(),
+  status: text('status', { enum: ['draft', 'published', 'archived'] }).default('draft'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`)
+}, (table) => ({
+  userIdIdx: index('blogs_user_id_idx').on(table.userId),
+  slugIdx: uniqueIndex('blogs_slug_idx').on(table.slug)
+}));
+export const events = sqliteTable('events', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  leadId: text('lead_id').references(() => leads.id, { onDelete: 'cascade' }),
+  eventType: text('event_type').notNull(), // signup, resume_upload, apply, upgrade
+  metadata: text('metadata', { mode: 'json' }).default('{}'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`)
+}, (table) => ({
+  eventTypeIdx: index('events_type_idx').on(table.eventType),
+  userIdIdx: index('events_user_id_idx').on(table.userId),
+  leadIdIdx: index('events_lead_id_idx').on(table.leadId)
+}));
 export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
 export type Item = typeof items.$inferSelect;
 export type Lead = typeof leads.$inferSelect;
 export type ContentAsset = typeof contentAssets.$inferSelect;
 export type Campaign = typeof campaigns.$inferSelect;
+export type Blog = typeof blogs.$inferSelect;
+export type Event = typeof events.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type NewItem = typeof items.$inferInsert;
 export type NewLead = typeof leads.$inferInsert;
 export type NewContentAsset = typeof contentAssets.$inferInsert;
 export type NewCampaign = typeof campaigns.$inferInsert;
+export type NewBlog = typeof blogs.$inferInsert;
+export type NewEvent = typeof events.$inferInsert;

@@ -16,6 +16,7 @@ import { ContentStudioPage } from '@/pages/ContentStudioPage'
 import { LeadsPage } from '@/pages/LeadsPage'
 import { ResumeScorerPage } from '@/pages/ResumeScorerPage'
 import { CampaignsPage } from '@/pages/CampaignsPage'
+import { BlogPage } from '@/pages/BlogPage'
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
   {
@@ -41,6 +42,11 @@ const router = createBrowserRouter([
   {
     path: "/score",
     element: <ResumeScorerPage />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/blog/:slug",
+    element: <BlogPage />,
     errorElement: <RouteErrorBoundary />,
   }
 ]);

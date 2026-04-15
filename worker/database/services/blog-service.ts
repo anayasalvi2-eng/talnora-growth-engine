@@ -1,11 +1,11 @@
 import { eq, and, desc, sql } from 'drizzle-orm';
 import type { Database } from '../index';
-import { blogs, type Blog } from '../schema';
+import { blogs, type Blog, type NewBlog } from '../schema';
 import { generateId } from '../../auth';
 export class BlogService {
   constructor(private db: Database) {}
   async create(userId: string, data: { title: string; content: string; metaDescription?: string }): Promise<Blog> {
-    const slugBase = data.title
+    const slug = data.title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
@@ -13,14 +13,11 @@ export class BlogService {
       id: generateId(),
       userId,
       title: data.title,
-      slug: `${slugBase}-${Math.floor(Math.random() * 10000)}`,
+      slug: `${slug}-${Math.floor(Math.random() * 1000)}`,
       content: data.content,
       metaDescription: data.metaDescription,
       status: 'published',
     }).returning();
-    if (!blog) {
-        throw new Error('Failed to create blog post');
-    }
     return blog;
   }
   async list(options: { status?: Blog['status']; limit?: number; offset?: number } = {}): Promise<{ data: Blog[]; total: number }> {
@@ -49,7 +46,7 @@ export class BlogService {
   async delete(id: string, userId: string): Promise<boolean> {
     const result = await this.db.delete(blogs)
       .where(and(eq(blogs.id, id), eq(blogs.userId, userId)));
-    return (result.meta.changes ?? 0) > 0;
+    return result.meta.changes > 0;
   }
 }
 export function createBlogService(db: Database): BlogService {

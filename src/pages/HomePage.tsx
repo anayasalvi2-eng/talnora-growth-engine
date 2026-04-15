@@ -2,36 +2,39 @@ import React, { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, FileText, Target, TrendingUp, Loader2, ArrowUpRight } from 'lucide-react';
+import { Users, FileText, Target, TrendingUp, Loader2, ArrowUpRight, Activity } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { api } from '@/lib/api-client';
+import { api, type AppEvent } from '@/lib/api-client';
 import { motion } from 'framer-motion';
-const MOCK_DATA = [
-  { name: 'Jan', leads: 400 },
-  { name: 'Feb', leads: 300 },
-  { name: 'Mar', leads: 200 },
-  { name: 'Apr', leads: 278 },
-  { name: 'May', leads: 189 },
-  { name: 'Jun', leads: 239 },
-  { name: 'Jul', leads: 349 }
+const MOCK_GRAPH_DATA = [
+  { name: 'Mon', leads: 42 },
+  { name: 'Tue', leads: 68 },
+  { name: 'Wed', leads: 54 },
+  { name: 'Thu', leads: 89 },
+  { name: 'Fri', leads: 112 },
+  { name: 'Sat', leads: 94 },
+  { name: 'Sun', leads: 124 }
 ];
 export function HomePage() {
   const [stats, setStats] = useState<Record<string, number>>({});
+  const [recentEvents, setRecentEvents] = useState<AppEvent[]>([]);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
-    async function fetchStats() {
+    async function fetchData() {
       try {
-        const res = await api.getLeadStats();
-        if (res.success && res.data) {
-          setStats(res.data);
-        }
+        const [statsRes, eventsRes] = await Promise.all([
+          api.getLeadStats(),
+          api.getRecentEvents()
+        ]);
+        if (statsRes.success && statsRes.data) setStats(statsRes.data);
+        if (eventsRes.success && eventsRes.data) setRecentEvents(eventsRes.data);
       } catch (e) {
-        console.error("Dashboard stats error", e);
+        console.error("Dashboard data fetch error", e);
       } finally {
         setLoading(false);
       }
     }
-    fetchStats();
+    fetchData();
   }, []);
   const STAT_CARDS = [
     { label: 'Total Leads', value: stats.total?.toLocaleString() || '0', icon: Users, color: 'bg-blue-600' },
@@ -83,9 +86,9 @@ export function HomePage() {
             <CardHeader className="px-0 pt-0 pb-6">
               <CardTitle className="text-lg font-bold">Capture Velocity</CardTitle>
             </CardHeader>
-            <div className="h-[350px] w-full">
+            <div className="h-[350px] w-full min-h-0">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={MOCK_DATA}>
+                <LineChart data={MOCK_GRAPH_DATA}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
@@ -109,20 +112,32 @@ export function HomePage() {
               <CardTitle className="text-lg font-bold">Recent Activity</CardTitle>
             </CardHeader>
             <div className="space-y-6">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="flex gap-4 items-center group cursor-pointer border-b border-muted/30 pb-4 last:border-0">
-                  <div className="h-10 w-10 rounded-xl bg-secondary flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                    <TrendingUp className="h-5 w-5 text-muted-foreground group-hover:text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold truncate">Lead Scored: 8{i}/100</p>
-                    <p className="text-xs text-muted-foreground">User {1024 - i}@gmail.com</p>
-                  </div>
-                  <span className="text-[10px] font-bold text-muted-foreground/40">{i * 3 + 2}m</span>
+              {loading ? (
+                <div className="flex justify-center py-10">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
-              ))}
+              ) : recentEvents.length === 0 ? (
+                <p className="text-sm text-center text-muted-foreground py-10">No recent activity detected.</p>
+              ) : (
+                recentEvents.map((event) => (
+                  <div key={event.id} className="flex gap-4 items-center group cursor-pointer border-b border-muted/30 pb-4 last:border-0">
+                    <div className="h-10 w-10 rounded-xl bg-secondary flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                      <Activity className="h-5 w-5 text-muted-foreground group-hover:text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold truncate capitalize">{event.eventType.replace('_', ' ')}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {event.metadata?.filename || event.metadata?.email || 'System Action'}
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-bold text-muted-foreground/40 shrink-0">
+                      {new Date(event.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                ))
+              )}
               <Button variant="ghost" className="w-full mt-2 text-xs font-bold uppercase tracking-widest text-primary bg-primary/5 rounded-xl py-6">
-                Full Lead Log
+                View Activity Log
               </Button>
             </div>
           </Card>
