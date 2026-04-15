@@ -4,6 +4,10 @@ import { topics, type Topic } from '../schema';
 import { generateId } from '../../auth';
 export class TopicService {
     constructor(private db: Database) {}
+    /**
+     * Content Decision Engine logic:
+     * Suggests topics based on system metrics (simulated weights)
+     */
     async generateSuggestions(userId?: string): Promise<Topic[]> {
         const categories: Topic['suggestedType'][] = ['blog', 'linkedin', 'linkedin', 'reddit', 'video_script'];
         const sources = ['user_pain', 'seo', 'trend'];
@@ -29,13 +33,13 @@ export class TopicService {
         }
         return results;
     }
-    async listSuggestions(status: NonNullable<Topic['status']> = 'suggested'): Promise<Topic[]> {
+    async listSuggestions(status: Topic['status'] = 'suggested'): Promise<Topic[]> {
         return this.db.select().from(topics)
             .where(eq(topics.status, status))
             .orderBy(desc(topics.createdAt))
             .limit(10);
     }
-    async updateStatus(id: string, status: NonNullable<Topic['status']>): Promise<Topic | null> {
+    async updateStatus(id: string, status: Topic['status']): Promise<Topic | null> {
         const [updated] = await this.db.update(topics)
             .set({ status })
             .where(eq(topics.id, id))

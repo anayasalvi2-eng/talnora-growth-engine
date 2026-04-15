@@ -6,7 +6,8 @@ import {
     createLeadService, 
     createCampaignService,
     createBlogService,
-    createEventService
+    createEventService,
+    createTopicService
 } from './database/services';
 import {
     createSession,
@@ -44,19 +45,22 @@ export function userRoutes(app: Hono<AppEnv>) {
     app.get('/api/auth/me', authMiddleware, async (c) => {
         return c.json({ success: true, data: c.get('user') });
     });
-    // Blogs
-    app.get('/api/blogs', async (c) => {
+    // Content Decision Engine (Topics)
+    app.get('/api/topics', authMiddleware, async (c) => {
         const db = createDatabase(c.env.DB);
-        const status = (c.req.query('status') || 'published') as any;
-        const result = await createBlogService(db).list({ status });
-        return c.json({ success: true, ...result });
+        const topicService = createTopicService(db);
+        let list = await topicService.listSuggestions();
+        if (list.length === 0) {
+            list = await topicService.generateSuggestions(c.get('user').id);
+        }
+        return c.json({ success: true, data: list });
     });
-    app.get('/api/blogs/:slug', async (c) => {
-        const slug = c.req.param('slug');
+    app.patch('/api/topics/:id', authMiddleware, async (c) => {
+        const id = c.req.param('id');
+        const body = await c.req.json();
         const db = createDatabase(c.env.DB);
-        const blog = await createBlogService(db).getBySlug(slug);
-        if (!blog) return c.json({ success: false, error: 'Blog not found' }, 404);
-        return c.json({ success: true, data: blog });
+        const topic = await createTopicService(db).updateStatus(id, body.status);
+        return c.json({ success: true, data: topic });
     });
     // Content
     app.get('/api/content', authMiddleware, async (c) => {
@@ -71,7 +75,7 @@ export function userRoutes(app: Hono<AppEnv>) {
         const body = await c.req.json();
         const db = createDatabase(c.env.DB);
         const contentService = createContentService(db);
-        const mockContent = `[AI Generated ${body.type.toUpperCase()}]\n\nTopic: ${body.topic}\n\nThis content is designed for Talnora's automated growth engine.`;
+        const mockContent = `[AI Generated ${body.type.toUpperCase()}]\n\nTopic: ${body.topic}\n\nThis content is designed for Talnora's automated growth engine. It focuses on solving key user pain points identified via ATS scoring analysis.`;
         const asset = await contentService.create(user.id, {
             type: body.type,
             topic: body.topic,
@@ -117,19 +121,19 @@ export function userRoutes(app: Hono<AppEnv>) {
         const result = await createLeadService(db).list({ status });
         return c.json({ success: true, ...result });
     });
-    app.patch('/api/leads/:id', authMiddleware, async (c) => {
-        const id = c.req.param('id');
-        const { status } = await c.req.json();
-        const db = createDatabase(c.env.DB);
-        const lead = await createLeadService(db).updateStatus(id, status);
-        return c.json({ success: true, data: lead });
-    });
     app.get('/api/leads/stats', authMiddleware, async (c) => {
         const db = createDatabase(c.env.DB);
         const stats = await createLeadService(db).getStats();
         return c.json({ success: true, data: stats });
     });
-    // Campaigns
+    // Campaigns Execution
+    app.post('/api/campaigns/:id/execute', authMiddleware, async (c) => {
+        const id = c.req.param('id');
+        const db = createDatabase(c.env.DB);
+        const campaignService = createCampaignService(db);
+        const campaign = await campaignService.updateStatus(id, c.get('user').id, 'active');
+        return c.json({ success: true, data: campaign });
+    });
     app.get('/api/campaigns', authMiddleware, async (c) => {
         const user = c.get('user');
         const db = createDatabase(c.env.DB);
@@ -142,6 +146,12 @@ export function userRoutes(app: Hono<AppEnv>) {
         const db = createDatabase(c.env.DB);
         const campaign = await createCampaignService(db).create(user.id, body);
         return c.json({ success: true, data: campaign });
+    });
+    app.delete('/api/campaigns/:id', authMiddleware, async (c) => {
+        const id = c.req.param('id');
+        const db = createDatabase(c.env.DB);
+        await createCampaignService(db).delete(id, c.get('user').id);
+        return c.json({ success: true });
     });
     // Events
     app.get('/api/events/recent', authMiddleware, async (c) => {

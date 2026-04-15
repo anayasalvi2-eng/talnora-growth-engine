@@ -5,6 +5,7 @@ export { LeadService, createLeadService } from './lead-service';
 export { CampaignService, createCampaignService } from './campaign-service';
 export { BlogService, createBlogService } from './blog-service';
 export { EventService, createEventService } from './event-service';
+export { TopicService, createTopicService } from './topic-service';
 export type { RegisterData, LoginData, UpdateProfileData } from './user-service';
 export type { CreateItemData, UpdateItemData, ListItemsOptions, PaginatedResult } from './item-service';
 export type { ListContentOptions } from './content-service';

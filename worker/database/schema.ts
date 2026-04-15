@@ -97,6 +97,37 @@ export const campaigns = sqliteTable('campaigns', {
 }, (table) => ({
   userIdIdx: index('campaigns_user_id_idx').on(table.userId)
 }));
+export const topics = sqliteTable('topics', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  topic: text('topic').notNull(),
+  score: integer('score').notNull(),
+  source: text('source').notNull(), // 'user_pain', 'seo', 'trend'
+  status: text('status', { enum: ['suggested', 'approved', 'dismissed', 'generated'] }).default('suggested'),
+  suggestedType: text('suggested_type', { enum: ['blog', 'linkedin', 'reddit', 'video_script', 'email'] }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`)
+}, (table) => ({
+  statusIdx: index('topics_status_idx').on(table.status)
+}));
+export const emailLogs = sqliteTable('email_logs', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  leadId: text('lead_id').references(() => leads.id, { onDelete: 'cascade' }),
+  campaignId: text('campaign_id').references(() => campaigns.id, { onDelete: 'set null' }),
+  emailType: text('email_type').notNull(), // 'nurture', 'score', 'promo'
+  status: text('status', { enum: ['sent', 'delivered', 'failed'] }).default('sent'),
+  opened: integer('opened', { mode: 'boolean' }).default(false),
+  clicked: integer('clicked', { mode: 'boolean' }).default(false),
+  timestamp: integer('timestamp', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`)
+});
+export const publishLogs = sqliteTable('publish_logs', {
+  id: text('id').primaryKey(),
+  contentId: text('content_id').references(() => contentAssets.id, { onDelete: 'cascade' }),
+  platform: text('platform').notNull(), // 'linkedin', 'reddit', 'blog'
+  status: text('status', { enum: ['success', 'failed'] }).notNull(),
+  response: text('response'),
+  timestamp: integer('timestamp', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`)
+});
 export const blogs = sqliteTable('blogs', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
@@ -131,10 +162,6 @@ export type ContentAsset = typeof contentAssets.$inferSelect;
 export type Campaign = typeof campaigns.$inferSelect;
 export type Blog = typeof blogs.$inferSelect;
 export type Event = typeof events.$inferSelect;
-export type NewUser = typeof users.$inferInsert;
-export type NewItem = typeof items.$inferInsert;
-export type NewLead = typeof leads.$inferInsert;
-export type NewContentAsset = typeof contentAssets.$inferInsert;
-export type NewCampaign = typeof campaigns.$inferInsert;
-export type NewBlog = typeof blogs.$inferInsert;
-export type NewEvent = typeof events.$inferInsert;
+export type Topic = typeof topics.$inferSelect;
+export type EmailLog = typeof emailLogs.$inferSelect;
+export type PublishLog = typeof publishLogs.$inferSelect;
