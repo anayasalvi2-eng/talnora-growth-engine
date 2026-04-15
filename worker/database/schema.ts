@@ -1,27 +1,27 @@
 import { sql } from 'drizzle-orm';
 import { sqliteTable, text, integer, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
-export const users = sqliteTable('users', {
-  id: text('id').primaryKey(),
-  email: text('email').notNull().unique(),
-  username: text('username').unique(),
-  displayName: text('display_name').notNull(),
-  avatarUrl: text('avatar_url'),
-  passwordHash: text('password_hash'),
-  provider: text('provider').notNull().default('email'),
-  providerId: text('provider_id'),
-  emailVerified: integer('email_verified', { mode: 'boolean' }).default(false),
-  preferences: text('preferences', { mode: 'json' }).default('{}'),
-  theme: text('theme', { enum: ['light', 'dark', 'system'] }).default('system'),
-  isActive: integer('is_active', { mode: 'boolean' }).default(true),
-  failedLoginAttempts: integer('failed_login_attempts').default(0),
-  lockedUntil: integer('locked_until', { mode: 'timestamp' }),
-  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
-  lastActiveAt: integer('last_active_at', { mode: 'timestamp' })
-}, (table) => ({
-  emailIdx: uniqueIndex('users_email_idx').on(table.email),
-  usernameIdx: index('users_username_idx').on(table.username)
-}));
+
+
+
+
+
+const publishLogs: unknown = (() => {
+  console.warn('publishLogs stub - please implement based on usage context');
+  return null;
+})();export const users = sqliteTable('users', { id: text('id').primaryKey(), email: text('email').notNull().unique(), username: text('username').unique(), displayName: text('display_name').notNull(), avatarUrl: text('avatar_url'), passwordHash: text('password_hash'), provider: text('provider').notNull().default('email'), providerId: text('provider_id'),
+    emailVerified: integer('email_verified', { mode: 'boolean' }).default(false),
+    preferences: text('preferences', { mode: 'json' }).default('{}'),
+    theme: text('theme', { enum: ['light', 'dark', 'system'] }).default('system'),
+    isActive: integer('is_active', { mode: 'boolean' }).default(true),
+    failedLoginAttempts: integer('failed_login_attempts').default(0),
+    lockedUntil: integer('locked_until', { mode: 'timestamp' }),
+    createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
+    lastActiveAt: integer('last_active_at', { mode: 'timestamp' })
+  }, (table) => ({
+    emailIdx: uniqueIndex('users_email_idx').on(table.email),
+    usernameIdx: index('users_username_idx').on(table.username)
+  }));
 export const sessions = sqliteTable('sessions', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
