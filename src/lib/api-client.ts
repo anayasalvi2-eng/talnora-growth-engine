@@ -95,11 +95,18 @@ class ApiClient {
         headers,
         body: body ? JSON.stringify(body) : undefined
       });
+      const contentType = res.headers.get('content-type');
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ error: 'Request failed' }));
-        return { success: false, error: errorData.error || `Error ${res.status}` };
+        if (contentType && contentType.includes('application/json')) {
+            const errorData = await res.json();
+            return { success: false, error: errorData.error || `Error ${res.status}` };
+        }
+        return { success: false, error: `Server Error ${res.status}` };
       }
-      return await res.json();
+      if (contentType && contentType.includes('application/json')) {
+          return await res.json();
+      }
+      return { success: true } as any;
     } catch (e) {
       return { success: false, error: 'Network request failed' };
     }
@@ -127,13 +134,17 @@ class ApiClient {
   async listTopics() { return this.request<Topic[]>('GET', '/api/topics'); }
   async approveTopic(id: string, status: string) { return this.request<Topic>('PATCH', `/api/topics/${id}`, { status }); }
   async listLeads(status?: string) { return this.request<Lead[]>('GET', `/api/leads${status ? `?status=${status}` : ''}`); }
-  async scoreResume(file: File, email: string) {
+  async scoreResume(file: File, email: string): Promise<ApiResponse<any>> {
     const formData = new FormData();
     formData.append('resume', file);
     formData.append('email', email);
     try {
       const res = await fetch('/api/public/score-resume', { method: 'POST', body: formData });
-      return res.ok ? await res.json() : { success: false, error: 'Upload failed' };
+      const contentType = res.headers.get('content-type');
+      if (res.ok && contentType?.includes('application/json')) {
+        return await res.json();
+      }
+      return { success: false, error: 'Upload failed: Server returned non-JSON response' };
     } catch (e) {
       return { success: false, error: 'Network error during upload' };
     }

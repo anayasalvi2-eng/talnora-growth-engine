@@ -7,13 +7,14 @@ export interface ListLeadsOptions {
     limit?: number;
     offset?: number;
 }
+export type CreateLeadPayload = Omit<NewLead, 'id'> & { id?: string };
 export class LeadService {
     constructor(private db: Database) {}
-    async create(data: NewLead): Promise<Lead> {
-        const insertData = {
+    async create(data: CreateLeadPayload): Promise<Lead> {
+        const insertData: NewLead = {
             ...data,
             id: data.id || generateId()
-        };
+        } as NewLead;
         const [lead] = await this.db.insert(leads).values(insertData).returning();
         if (!lead) {
             throw new Error('Failed to create lead');

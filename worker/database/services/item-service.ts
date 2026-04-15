@@ -2,6 +2,13 @@ import { eq, and, desc, asc, like, sql } from 'drizzle-orm';
 import type { Database } from '../index';
 import { items, type Item, type NewItem } from '../schema';
 import { generateId } from '../../auth';
+export interface CreateItemData {
+    title: string;
+    description?: string;
+    status?: 'draft' | 'active' | 'archived';
+    metadata?: Record<string, any>;
+}
+export interface UpdateItemData extends Partial<CreateItemData> {}
 export interface ListItemsOptions {
     status?: 'draft' | 'active' | 'archived';
     search?: string;
@@ -21,7 +28,7 @@ export interface PaginatedResult<T> {
 }
 export class ItemService {
     constructor(private db: Database) {}
-    async create(userId: string, data: Partial<NewItem>): Promise<Item> {
+    async create(userId: string, data: CreateItemData): Promise<Item> {
         const [item] = await this.db.insert(items).values({
             id: generateId(),
             userId,
