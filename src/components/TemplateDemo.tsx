@@ -128,7 +128,7 @@ function ItemsDemo() {
         setLoading(true);
         setError(null);
         try {
-            const response = await api.listItems({ limit: 10 });
+            const response = await api?.listItems({ limit: 10 });
             if (response.success && response.data) {
                 setItems(response.data);
             } else {
@@ -145,7 +145,7 @@ function ItemsDemo() {
         setLoading(true);
         setError(null);
         try {
-            const response = await api.createItem({ title: newTitle, status: 'active' });
+            const response = await api?.createItem({ title: newTitle, status: 'active' });
             if (response.success && response.data) {
                 setItems([response.data, ...items]);
                 setNewTitle('');
@@ -162,7 +162,7 @@ function ItemsDemo() {
         setLoading(true);
         setError(null);
         try {
-            const response = await api.deleteItem(id);
+            const response = await api?.deleteItem(id);
             if (response.success) {
                 setItems(items.filter((item) => item.id !== id));
             } else {

@@ -102,7 +102,7 @@ export const topics = sqliteTable('topics', {
   userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
   topic: text('topic').notNull(),
   score: integer('score').notNull(),
-  source: text('source').notNull(), // 'user_pain', 'seo', 'trend'
+  source: text('source').notNull(),
   status: text('status', { enum: ['suggested', 'approved', 'dismissed', 'generated'] }).default('suggested'),
   suggestedType: text('suggested_type', { enum: ['blog', 'linkedin', 'reddit', 'video_script', 'email'] }),
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`)
@@ -114,7 +114,7 @@ export const emailLogs = sqliteTable('email_logs', {
   userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
   leadId: text('lead_id').references(() => leads.id, { onDelete: 'cascade' }),
   campaignId: text('campaign_id').references(() => campaigns.id, { onDelete: 'set null' }),
-  emailType: text('email_type').notNull(), // 'nurture', 'score', 'promo'
+  emailType: text('email_type').notNull(),
   status: text('status', { enum: ['sent', 'delivered', 'failed'] }).default('sent'),
   opened: integer('opened', { mode: 'boolean' }).default(false),
   clicked: integer('clicked', { mode: 'boolean' }).default(false),
@@ -123,7 +123,7 @@ export const emailLogs = sqliteTable('email_logs', {
 export const publishLogs = sqliteTable('publish_logs', {
   id: text('id').primaryKey(),
   contentId: text('content_id').references(() => contentAssets.id, { onDelete: 'cascade' }),
-  platform: text('platform').notNull(), // 'linkedin', 'reddit', 'blog'
+  platform: text('platform').notNull(),
   status: text('status', { enum: ['success', 'failed'] }).notNull(),
   response: text('response'),
   timestamp: integer('timestamp', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`)
@@ -146,7 +146,7 @@ export const events = sqliteTable('events', {
   id: text('id').primaryKey(),
   userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
   leadId: text('lead_id').references(() => leads.id, { onDelete: 'cascade' }),
-  eventType: text('event_type').notNull(), // signup, resume_upload, apply, upgrade
+  eventType: text('event_type').notNull(),
   metadata: text('metadata', { mode: 'json' }).default('{}'),
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`)
 }, (table) => ({
@@ -164,4 +164,4 @@ export type Blog = typeof blogs.$inferSelect;
 export type Event = typeof events.$inferSelect;
 export type Topic = typeof topics.$inferSelect;
 export type EmailLog = typeof emailLogs.$inferSelect;
-export type PublishLog = typeof publishLogs.$inferSelect;
+export type PublishLog = typeof publishLogs.$inferSelect;export const NewItem = { _stubComment: "This is a **STUB** export for 'NewItem', please implement it properly", _stubFor: "NewItem" };export const NewLead = { _stubComment: "This is a **STUB** export for 'NewLead', please implement it properly", _stubFor: "NewLead" };export const NewUser = { _stubComment: "This is a **STUB** export for 'NewUser', please implement it properly", _stubFor: "NewUser" };
