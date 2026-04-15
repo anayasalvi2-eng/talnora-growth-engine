@@ -165,6 +165,12 @@ export function userRoutes(app: Hono<any>) {
         const stats = await createLeadService(db).getStats();
         return c.json({ success: true, data: stats });
     });
+    app.post('/api/leads/bulk', authMiddleware, async (c) => {
+        const leadsData = await c.req.json();
+        const db = createDatabase(c.env.DB);
+        const results = await createLeadService(db).bulkCreate(leadsData);
+        return c.json({ success: true, data: results });
+    });
     app.patch('/api/leads/:id', authMiddleware, async (c) => {
         const id = c.req.param('id');
         if (!id) return c.json({ success: false, error: 'ID required' }, 400);

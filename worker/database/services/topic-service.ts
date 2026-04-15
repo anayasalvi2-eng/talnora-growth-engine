@@ -1,4 +1,4 @@
-import { eq, and, desc, sql, isNotNull } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import type { Database } from '../index';
 import { topics, type Topic } from '../schema';
 import { generateId } from '../../auth';

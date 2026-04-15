@@ -1,6 +1,6 @@
 import { eq, and, desc, asc, like, sql } from 'drizzle-orm';
 import type { Database } from '../index';
-import { items, type Item, type NewItem } from '../schema';
+import { items, type Item } from '../schema';
 import { generateId } from '../../auth';
 export interface CreateItemData {
     title: string;
@@ -8,7 +8,7 @@ export interface CreateItemData {
     status?: 'draft' | 'active' | 'archived';
     metadata?: Record<string, any>;
 }
-export interface UpdateItemData extends Partial<CreateItemData> {}
+export type UpdateItemData = Partial<CreateItemData>;
 export interface ListItemsOptions {
     status?: 'draft' | 'active' | 'archived';
     search?: string;

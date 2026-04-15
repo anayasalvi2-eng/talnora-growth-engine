@@ -134,6 +134,7 @@ class ApiClient {
   async listTopics() { return this.request<Topic[]>('GET', '/api/topics'); }
   async approveTopic(id: string, status: string) { return this.request<Topic>('PATCH', `/api/topics/${id}`, { status }); }
   async listLeads(status?: string) { return this.request<Lead[]>('GET', `/api/leads${status ? `?status=${status}` : ''}`); }
+  async bulkCreateLeads(leads: Partial<Lead>[]) { return this.request<Lead[]>('POST', '/api/leads/bulk', leads); }
   async scoreResume(file: File, email: string): Promise<ApiResponse<any>> {
     const formData = new FormData();
     formData.append('resume', file);

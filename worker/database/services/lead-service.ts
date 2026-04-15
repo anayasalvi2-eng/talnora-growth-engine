@@ -21,6 +21,16 @@ export class LeadService {
         }
         return lead;
     }
+    async bulkCreate(data: CreateLeadPayload[]): Promise<Lead[]> {
+        if (data.length === 0) return [];
+        const results: Lead[] = [];
+        // Standard D1 batching via loop to ensure compatibility and stability
+        for (const item of data) {
+            const lead = await this.create(item);
+            results.push(lead);
+        }
+        return results;
+    }
     async list(options: ListLeadsOptions = {}): Promise<{ data: Lead[], total: number }> {
         const { status, limit = 50, offset = 0 } = options;
         const conditions = [];
