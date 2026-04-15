@@ -87,8 +87,8 @@ export async function verifyToken(
 ): Promise<TokenPayload | null> {
     try {
         const secret = new TextEncoder().encode(jwtSecret);
-        const { payload } = await jose.jwtVerify(token, secret);
-        return payload as TokenPayload;
+        const { payload } = await jose.jwtVerify(token, secret) as any;
+        return payload as unknown as TokenPayload;
     } catch {
         return null;
     }

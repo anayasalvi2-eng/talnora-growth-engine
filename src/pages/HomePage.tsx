@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Users, FileText, Target, TrendingUp, Loader2 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { api } from '@/lib/api-client';interface ButtonProps {children?: React.ReactNode;className?: string;style?: React.CSSProperties;
-  [key: string]: unknown;
-}interface ButtonProps {children?: React.ReactNode;className?: string;style?: React.CSSProperties;[key: string]: unknown;}const MOCK_DATA = [{ name: 'Jan', leads: 400 },
-{ name: 'Feb', leads: 300 },
-{ name: 'Mar', leads: 200 },
-{ name: 'Apr', leads: 278 },
-{ name: 'May', leads: 189 },
-{ name: 'Jun', leads: 239 },
-{ name: 'Jul', leads: 349 }];
-
+import { api } from '@/lib/api-client';
+const MOCK_DATA = [
+  { name: 'Jan', leads: 400 },
+  { name: 'Feb', leads: 300 },
+  { name: 'Mar', leads: 200 },
+  { name: 'Apr', leads: 278 },
+  { name: 'May', leads: 189 },
+  { name: 'Jun', leads: 239 },
+  { name: 'Jul', leads: 349 }
+];
 export function HomePage() {
   const [stats, setStats] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
@@ -32,11 +33,11 @@ export function HomePage() {
     fetchStats();
   }, []);
   const STAT_CARDS = [
-  { label: 'Total Leads', value: stats.total?.toLocaleString() || '0', icon: Users, color: 'text-blue-600' },
-  { label: 'New Captured', value: stats.new?.toLocaleString() || '0', icon: Target, color: 'text-indigo-600' },
-  { label: 'Converted', value: stats.converted?.toLocaleString() || '0', icon: TrendingUp, color: 'text-emerald-600' },
-  { label: 'Efficiency', value: stats.total ? `${(stats.converted / stats.total * 100).toFixed(1)}%` : '0%', icon: FileText, color: 'text-orange-600' }];
-
+    { label: 'Total Leads', value: stats.total?.toLocaleString() || '0', icon: Users, color: 'text-blue-600' },
+    { label: 'New Captured', value: stats.new?.toLocaleString() || '0', icon: Target, color: 'text-indigo-600' },
+    { label: 'Converted', value: stats.converted?.toLocaleString() || '0', icon: TrendingUp, color: 'text-emerald-600' },
+    { label: 'Efficiency', value: stats.total ? `${((stats.converted || 0) / stats.total * 100).toFixed(1)}%` : '0%', icon: FileText, color: 'text-orange-600' }
+  ];
   return (
     <AppLayout container>
       <div className="space-y-8">
@@ -45,8 +46,8 @@ export function HomePage() {
           <p className="text-body mt-1">Real-time performance metrics for your marketing outreach.</p>
         </header>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {STAT_CARDS.map((stat) =>
-          <Card key={stat.label} className="border-none shadow-soft hover:shadow-glow transition-all duration-300">
+          {STAT_CARDS.map((stat) => (
+            <Card key={stat.label} className="border-none shadow-soft hover:shadow-glow transition-all duration-300">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -61,7 +62,7 @@ export function HomePage() {
                 </div>
               </CardContent>
             </Card>
-          )}
+          ))}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <Card className="lg:col-span-2 border-none shadow-soft p-6">
@@ -75,16 +76,16 @@ export function HomePage() {
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
                   <Tooltip
-                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
-                  
+                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                  />
                   <Line
                     type="monotone"
                     dataKey="leads"
                     stroke="hsl(var(--primary))"
                     strokeWidth={4}
                     dot={{ r: 5, fill: 'hsl(var(--primary))', strokeWidth: 2, stroke: '#fff' }}
-                    activeDot={{ r: 8, strokeWidth: 0 }} />
-                  
+                    activeDot={{ r: 8, strokeWidth: 0 }}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -94,8 +95,8 @@ export function HomePage() {
               <CardTitle className="text-lg font-bold">Recent Leads</CardTitle>
             </CardHeader>
             <div className="space-y-6 pt-4">
-              {[...Array(5)].map((_, i) =>
-              <div key={i} className="flex gap-4 items-center group cursor-pointer">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex gap-4 items-center group cursor-pointer">
                   <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center group-hover:bg-primary/10 transition-colors">
                     <Users className="h-5 w-5 text-muted-foreground group-hover:text-primary" />
                   </div>
@@ -105,7 +106,7 @@ export function HomePage() {
                   </div>
                   <span className="text-[10px] font-bold text-muted-foreground/50">{i + 1}m ago</span>
                 </div>
-              )}
+              ))}
               <Button variant="ghost" className="w-full mt-4 text-xs font-bold uppercase tracking-widest">
                 View All Activity
               </Button>
@@ -113,6 +114,6 @@ export function HomePage() {
           </Card>
         </div>
       </div>
-    </AppLayout>);
-
+    </AppLayout>
+  );
 }

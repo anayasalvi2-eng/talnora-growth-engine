@@ -10,7 +10,7 @@ export interface ListLeadsOptions {
 export class LeadService {
     constructor(private db: Database) {}
     async create(data: Omit<NewLead, 'id'>): Promise<Lead> {
-        const [lead] = await this.db.insert(leads).values({
+        const [lead] = await this.db.insert(leads).values({ 
             id: generateId(),
             ...data,
         }).returning();
@@ -59,9 +59,11 @@ export class LeadService {
         results.forEach(row => {
             if (row.status) {
                 stats[row.status] = row.count;
-                stats.total += row.count;
             }
         });
+        // Calculate total accurately
+        stats.total = Object.values(stats).reduce((acc, curr) => acc + curr, 0) - stats.total;
+        stats.total = results.reduce((acc, curr) => acc + (curr.count || 0), 0);
         return stats;
     }
     async delete(id: string): Promise<boolean> {

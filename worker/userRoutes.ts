@@ -55,13 +55,35 @@ export function userRoutes(app: Hono<AppEnv>) {
         const asset = await contentService.create(user.id, {
             type: body.type,
             topic: body.topic,
-            content: mockContent
+            content: mockContent as string
         });
         return c.json({ success: true, data: asset });
     });
+    app.post('/api/public/score-resume', async (c) => {
+        const formData = await c.req.formData();
+        const email = formData.get('email') as string;
+        const resume = formData.get('resume') as File;
+        
+        if (!email || !resume) return c.json({ success: false, error: 'Email and resume required' }, 400);
+
+        const db = createDatabase(c.env.DB);
+        const leadService = createLeadService(db);
+
+        const score = 70 + Math.floor(Math.random() * 25); // Mock score
+        const lead = await leadService.create({
+            email,
+            name: email.split('@')[0],
+            source: 'resume-scorer',
+            resumeScore: score,
+            status: 'new',
+            metadata: { filename: resume.name }
+        });
+
+        return c.json({ success: true, data: { score, feedback: ["Use more action verbs", "quantify achievements", "ATS-friendly layout detected"] } });
+    });
     app.get('/api/leads', authMiddleware, async (c) => {
         const db = createDatabase(c.env.DB);
-        const status = c.req.query('status') as any;
+        const status = (c.req.query('status') || undefined) as any;
         const result = await createLeadService(db).list({ status });
         return c.json({ success: true, ...result });
     });

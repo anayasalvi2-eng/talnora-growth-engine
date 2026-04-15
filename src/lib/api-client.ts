@@ -103,6 +103,13 @@ class ApiClient {
   async listLeads(status?: string) {
     return this.request<Lead[]>('GET', `/api/leads${status ? `?status=${status}` : ''}`);
   }
+  async scoreResume(file: File, email: string) {
+    const formData = new FormData();
+    formData.append('resume', file);
+    formData.append('email', email);
+    const res = await fetch('/api/public/score-resume', { method: 'POST', body: formData });
+    return await res.json() as ApiResponse<any>;
+  }
   async updateLeadStatus(id: string, status: string) {
     return this.request<Lead>('PATCH', `/api/leads/${id}`, { status });
   }

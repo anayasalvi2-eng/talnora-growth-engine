@@ -138,13 +138,10 @@ export class ItemService {
             .where(
                 and(
                     eq(items.id, itemId),
-                    eq(items.userId, userId)
-                )
+                    eq(items.userId, userId)                )
             );
-
-        return result?.rowsAffected > 0;
+        return result?.meta?.changes > 0;
     }
-
     /**
      * List items for a user with filtering and pagination
      */
@@ -253,13 +250,11 @@ export class ItemService {
                 .set({ status, updatedAt: new Date() })
                 .where(
                     and(
-                        eq(items.id, itemId),
-                        eq(items.userId, userId)
+                        eq(items.id, itemId),                        eq(items.userId, userId)
                     )
                 );
-            updated += result?.rowsAffected;
+            updated += result?.meta?.changes || 0;
         }
-
         return updated;
     }
 
@@ -275,13 +270,11 @@ export class ItemService {
                 .delete(items)
                 .where(
                     and(
-                        eq(items.id, itemId),
-                        eq(items.userId, userId)
+                        eq(items.id, itemId),                        eq(items.userId, userId)
                     )
                 );
-            deleted += result?.rowsAffected;
+            deleted += result?.meta?.changes || 0;
         }
-
         return deleted;
     }
 }
