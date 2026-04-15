@@ -15,6 +15,7 @@ import { HomePage } from '@/pages/HomePage'
 import { ContentStudioPage } from '@/pages/ContentStudioPage'
 import { LeadsPage } from '@/pages/LeadsPage'
 import { ResumeScorerPage } from '@/pages/ResumeScorerPage'
+import { CampaignsPage } from '@/pages/CampaignsPage'
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
   {
@@ -33,13 +34,13 @@ const router = createBrowserRouter([
     errorElement: <RouteErrorBoundary />,
   },
   {
-    path: "/score",
-    element: <ResumeScorerPage />,
+    path: "/campaigns",
+    element: <CampaignsPage />,
     errorElement: <RouteErrorBoundary />,
   },
   {
-    path: "/campaigns",
-    element: <div className="p-20 text-center text-muted-foreground">Campaigns & Outreach sequences coming soon.</div>,
+    path: "/score",
+    element: <ResumeScorerPage />,
     errorElement: <RouteErrorBoundary />,
   }
 ]);

@@ -88,9 +88,11 @@ export const campaigns = sqliteTable('campaigns', {
   userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   status: text('status', { enum: ['draft', 'active', 'paused', 'completed'] }).default('draft'),
+  template: text('template'),
   totalLeads: integer('total_leads').default(0),
   sentCount: integer('sent_count').default(0),
   openCount: integer('open_count').default(0),
+  metadata: text('metadata', { mode: 'json' }).default('{}'),
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`)
 }, (table) => ({
   userIdIdx: index('campaigns_user_id_idx').on(table.userId)

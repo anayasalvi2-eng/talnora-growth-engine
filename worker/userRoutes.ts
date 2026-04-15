@@ -1,8 +1,11 @@
 import { Hono, Context } from 'hono';
 import { createDatabase } from './database';
-import { createUserService } from './database/services/user-service';
-import { createContentService } from './database/services/content-service';
-import { createLeadService } from './database/services/lead-service';
+import { 
+    createUserService, 
+    createContentService, 
+    createLeadService, 
+    createCampaignService 
+} from './database/services';
 import {
     createSession,
     validateSession,
@@ -19,7 +22,7 @@ const authMiddleware = async (c: Context<AppEnv>, next: () => Promise<void>) => 
     c.set('session', result.session);
     await next();
 };
-export function userRoutes(app: Hono<AppEnv>) {
+export function userRoutes(app: Hono<any>) {
     app.post('/api/auth/register', async (c) => {
         const body = await c.req.json();
         const db = createDatabase(c.env.DB);
@@ -39,6 +42,7 @@ export function userRoutes(app: Hono<AppEnv>) {
     app.get('/api/auth/me', authMiddleware, async (c) => {
         return c.json({ success: true, data: c.get('user') });
     });
+    // Content
     app.get('/api/content', authMiddleware, async (c) => {
         const user = c.get('user');
         const db = createDatabase(c.env.DB);
@@ -55,22 +59,20 @@ export function userRoutes(app: Hono<AppEnv>) {
         const asset = await contentService.create(user.id, {
             type: body.type,
             topic: body.topic,
-            content: mockContent as string
+            content: mockContent
         });
         return c.json({ success: true, data: asset });
     });
+    // Public Resume Score
     app.post('/api/public/score-resume', async (c) => {
         const formData = await c.req.formData();
         const email = formData.get('email') as string;
         const resume = formData.get('resume') as File;
-        
         if (!email || !resume) return c.json({ success: false, error: 'Email and resume required' }, 400);
-
         const db = createDatabase(c.env.DB);
         const leadService = createLeadService(db);
-
-        const score = 70 + Math.floor(Math.random() * 25); // Mock score
-        const lead = await leadService.create({
+        const score = 70 + Math.floor(Math.random() * 25);
+        await leadService.create({
             email,
             name: email.split('@')[0],
             source: 'resume-scorer',
@@ -78,13 +80,13 @@ export function userRoutes(app: Hono<AppEnv>) {
             status: 'new',
             metadata: { filename: resume.name }
         });
-
-        return c.json({ success: true, data: { score, feedback: ["Use more action verbs", "quantify achievements", "ATS-friendly layout detected"] } });
+        return c.json({ success: true, data: { score, feedback: ["Use more action verbs", "ATS-friendly layout detected"] } });
     });
+    // Leads
     app.get('/api/leads', authMiddleware, async (c) => {
         const db = createDatabase(c.env.DB);
-        const status = (c.req.query('status') || undefined) as any;
-        const result = await createLeadService(db).list({ status });
+        const status = (c.req.query('status') || '') as any;
+        const result = await createLeadService(db).list({ status: status || undefined });
         return c.json({ success: true, ...result });
     });
     app.patch('/api/leads/:id', authMiddleware, async (c) => {
@@ -98,5 +100,26 @@ export function userRoutes(app: Hono<AppEnv>) {
         const db = createDatabase(c.env.DB);
         const stats = await createLeadService(db).getStats();
         return c.json({ success: true, data: stats });
+    });
+    // Campaigns
+    app.get('/api/campaigns', authMiddleware, async (c) => {
+        const user = c.get('user');
+        const db = createDatabase(c.env.DB);
+        const result = await createCampaignService(db).list(user.id);
+        return c.json({ success: true, ...result });
+    });
+    app.post('/api/campaigns', authMiddleware, async (c) => {
+        const user = c.get('user');
+        const body = await c.req.json();
+        const db = createDatabase(c.env.DB);
+        const campaign = await createCampaignService(db).create(user.id, body);
+        return c.json({ success: true, data: campaign });
+    });
+    app.delete('/api/campaigns/:id', authMiddleware, async (c) => {
+        const user = c.get('user');
+        const id = c.req.param('id');
+        const db = createDatabase(c.env.DB);
+        const success = await createCampaignService(db).delete(id, user.id);
+        return c.json({ success });
     });
 }

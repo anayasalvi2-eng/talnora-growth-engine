@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, FileText, Target, TrendingUp, Loader2 } from 'lucide-react';
+import { Users, FileText, Target, TrendingUp, Loader2, ArrowUpRight } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { api } from '@/lib/api-client';
+import { motion } from 'framer-motion';
 const MOCK_DATA = [
   { name: 'Jan', leads: 400 },
   { name: 'Feb', leads: 300 },
@@ -25,7 +26,7 @@ export function HomePage() {
           setStats(res.data);
         }
       } catch (e) {
-        console.error("Failed to fetch dashboard stats", e);
+        console.error("Dashboard stats error", e);
       } finally {
         setLoading(false);
       }
@@ -33,43 +34,56 @@ export function HomePage() {
     fetchStats();
   }, []);
   const STAT_CARDS = [
-    { label: 'Total Leads', value: stats.total?.toLocaleString() || '0', icon: Users, color: 'text-blue-600' },
-    { label: 'New Captured', value: stats.new?.toLocaleString() || '0', icon: Target, color: 'text-indigo-600' },
-    { label: 'Converted', value: stats.converted?.toLocaleString() || '0', icon: TrendingUp, color: 'text-emerald-600' },
-    { label: 'Efficiency', value: stats.total ? `${((stats.converted || 0) / stats.total * 100).toFixed(1)}%` : '0%', icon: FileText, color: 'text-orange-600' }
+    { label: 'Total Leads', value: stats.total?.toLocaleString() || '0', icon: Users, color: 'bg-blue-600' },
+    { label: 'New Captured', value: stats.new?.toLocaleString() || '0', icon: Target, color: 'bg-indigo-600' },
+    { label: 'Converted', value: stats.converted?.toLocaleString() || '0', icon: TrendingUp, color: 'bg-emerald-600' },
+    { label: 'Efficiency', value: stats.total ? `${((stats.converted || 0) / stats.total * 100).toFixed(1)}%` : '0%', icon: FileText, color: 'bg-orange-600' }
   ];
   return (
     <AppLayout container>
       <div className="space-y-8">
-        <header>
-          <h1 className="text-display text-3xl md:text-4xl font-bold text-foreground">Growth Dashboard</h1>
-          <p className="text-body mt-1">Real-time performance metrics for your marketing outreach.</p>
+        <header className="flex justify-between items-end">
+          <div>
+            <h1 className="text-4xl font-display font-bold text-foreground">Growth Dashboard</h1>
+            <p className="text-muted-foreground mt-1">Real-time performance metrics for your outreach.</p>
+          </div>
+          <Button variant="outline" className="rounded-xl border-primary/20 hover:bg-primary/5 text-primary font-bold">
+            Generate Report
+            <ArrowUpRight className="ml-2 h-4 w-4" />
+          </Button>
         </header>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {STAT_CARDS.map((stat) => (
-            <Card key={stat.label} className="border-none shadow-soft hover:shadow-glow transition-all duration-300">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
-                    <h3 className="text-2xl font-bold mt-1">
-                      {loading ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : stat.value}
-                    </h3>
+          {STAT_CARDS.map((stat, idx) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: idx * 0.1 }}
+            >
+              <Card className="border-none shadow-soft hover:shadow-glow transition-all duration-300 rounded-3xl group cursor-pointer">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{stat.label}</p>
+                      <h3 className="text-3xl font-display font-bold mt-1">
+                        {loading ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : stat.value}
+                      </h3>
+                    </div>
+                    <div className={`${stat.color} p-3 rounded-2xl shadow-lg group-hover:scale-110 transition-transform`}>
+                      <stat.icon className="h-6 w-6 text-white" />
+                    </div>
                   </div>
-                  <div className={`${stat.color} p-2 bg-muted/50 rounded-xl`}>
-                    <stat.icon className="h-6 w-6" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <Card className="lg:col-span-2 border-none shadow-soft p-6">
-            <CardHeader className="px-0 pt-0">
-              <CardTitle className="text-lg font-bold">Lead Velocity</CardTitle>
+          <Card className="lg:col-span-2 border-none shadow-soft p-8 rounded-3xl">
+            <CardHeader className="px-0 pt-0 pb-6">
+              <CardTitle className="text-lg font-bold">Capture Velocity</CardTitle>
             </CardHeader>
-            <div className="h-[350px] w-full pt-4">
+            <div className="h-[350px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={MOCK_DATA}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -81,34 +95,34 @@ export function HomePage() {
                   <Line
                     type="monotone"
                     dataKey="leads"
-                    stroke="hsl(var(--primary))"
+                    stroke="#4f46e5"
                     strokeWidth={4}
-                    dot={{ r: 5, fill: 'hsl(var(--primary))', strokeWidth: 2, stroke: '#fff' }}
+                    dot={{ r: 6, fill: '#4f46e5', strokeWidth: 3, stroke: '#fff' }}
                     activeDot={{ r: 8, strokeWidth: 0 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           </Card>
-          <Card className="border-none shadow-soft p-6">
-            <CardHeader className="px-0 pt-0">
-              <CardTitle className="text-lg font-bold">Recent Leads</CardTitle>
+          <Card className="border-none shadow-soft p-8 rounded-3xl">
+            <CardHeader className="px-0 pt-0 pb-6">
+              <CardTitle className="text-lg font-bold">Recent Activity</CardTitle>
             </CardHeader>
-            <div className="space-y-6 pt-4">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex gap-4 items-center group cursor-pointer">
-                  <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                    <Users className="h-5 w-5 text-muted-foreground group-hover:text-primary" />
+            <div className="space-y-6">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex gap-4 items-center group cursor-pointer border-b border-muted/30 pb-4 last:border-0">
+                  <div className="h-10 w-10 rounded-xl bg-secondary flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                    <TrendingUp className="h-5 w-5 text-muted-foreground group-hover:text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate">Lead Capture #{1024 - i}</p>
-                    <p className="text-xs text-muted-foreground">Manual Source • Score: {85 - i}</p>
+                    <p className="text-sm font-bold truncate">Lead Scored: 8{i}/100</p>
+                    <p className="text-xs text-muted-foreground">User {1024 - i}@gmail.com</p>
                   </div>
-                  <span className="text-[10px] font-bold text-muted-foreground/50">{i + 1}m ago</span>
+                  <span className="text-[10px] font-bold text-muted-foreground/40">{i * 3 + 2}m</span>
                 </div>
               ))}
-              <Button variant="ghost" className="w-full mt-4 text-xs font-bold uppercase tracking-widest">
-                View All Activity
+              <Button variant="ghost" className="w-full mt-2 text-xs font-bold uppercase tracking-widest text-primary bg-primary/5 rounded-xl py-6">
+                Full Lead Log
               </Button>
             </div>
           </Card>
