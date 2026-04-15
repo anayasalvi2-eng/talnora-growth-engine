@@ -9,13 +9,14 @@ export interface ListLeadsOptions {
 }
 export class LeadService {
     constructor(private db: Database) {}
-    async create(data: Omit<NewLead, 'id'>): Promise<Lead> {
-        const [lead] = await this.db.insert(leads).values({ 
-            id: generateId(),
+    async create(data: NewLead): Promise<Lead> {
+        const insertData = {
             ...data,
-        }).returning();
+            id: data.id || generateId()
+        };
+        const [lead] = await this.db.insert(leads).values(insertData).returning();
         if (!lead) {
-            throw new Error('Failed to create lead: Insert operation returned no result.');
+            throw new Error('Failed to create lead');
         }
         return lead;
     }
@@ -39,7 +40,7 @@ export class LeadService {
             total: countResult[0]?.count || 0
         };
     }
-    async updateStatus(id: string, status: Lead['status']): Promise<Lead | null> {
+    async updateStatus(id: string, status: NonNullable<Lead['status']>): Promise<Lead | null> {
         const [lead] = await this.db.update(leads)
             .set({ status, updatedAt: new Date() })
             .where(eq(leads.id, id))

@@ -7,7 +7,8 @@ import {
     createCampaignService,
     createBlogService,
     createEventService,
-    createTopicService
+    createTopicService,
+    createItemService
 } from './database/services';
 import {
     createSession,
@@ -44,6 +45,34 @@ export function userRoutes(app: Hono<AppEnv>) {
     });
     app.get('/api/auth/me', authMiddleware, async (c) => {
         return c.json({ success: true, data: c.get('user') });
+    });
+    app.put('/api/auth/me', authMiddleware, async (c) => {
+        const body = await c.req.json();
+        const db = createDatabase(c.env.DB);
+        // Simplified update logic for demonstration
+        const [user] = await db.update(require('./database/schema').users)
+            .set({ ...body, updatedAt: new Date() })
+            .where(require('drizzle-orm').eq(require('./database/schema').users.id, c.get('user').id))
+            .returning();
+        return c.json({ success: true, data: user });
+    });
+    // Items CRUD
+    app.get('/api/items', authMiddleware, async (c) => {
+        const db = createDatabase(c.env.DB);
+        const result = await createItemService(db).list(c.get('user').id);
+        return c.json({ success: true, data: result.data });
+    });
+    app.post('/api/items', authMiddleware, async (c) => {
+        const body = await c.req.json();
+        const db = createDatabase(c.env.DB);
+        const item = await createItemService(db).create(c.get('user').id, body);
+        return c.json({ success: true, data: item });
+    });
+    app.delete('/api/items/:id', authMiddleware, async (c) => {
+        const id = c.req.param('id');
+        const db = createDatabase(c.env.DB);
+        await createItemService(db).delete(id, c.get('user').id);
+        return c.json({ success: true });
     });
     // Content Decision Engine (Topics)
     app.get('/api/topics', authMiddleware, async (c) => {
@@ -82,6 +111,19 @@ export function userRoutes(app: Hono<AppEnv>) {
             content: mockContent
         });
         return c.json({ success: true, data: asset });
+    });
+    // Blogs
+    app.get('/api/blogs', async (c) => {
+        const db = createDatabase(c.env.DB);
+        const result = await createBlogService(db).list({ status: 'published' });
+        return c.json({ success: true, ...result });
+    });
+    app.get('/api/blogs/:slug', async (c) => {
+        const slug = c.req.param('slug');
+        const db = createDatabase(c.env.DB);
+        const blog = await createBlogService(db).getBySlug(slug);
+        if (!blog) return c.json({ success: false, error: 'Not found' }, 404);
+        return c.json({ success: true, data: blog });
     });
     // Public Resume Score
     app.post('/api/public/score-resume', async (c) => {
@@ -125,6 +167,13 @@ export function userRoutes(app: Hono<AppEnv>) {
         const db = createDatabase(c.env.DB);
         const stats = await createLeadService(db).getStats();
         return c.json({ success: true, data: stats });
+    });
+    app.patch('/api/leads/:id', authMiddleware, async (c) => {
+        const id = c.req.param('id');
+        const body = await c.req.json();
+        const db = createDatabase(c.env.DB);
+        const lead = await createLeadService(db).updateStatus(id, body.status);
+        return c.json({ success: true, data: lead });
     });
     // Campaigns Execution
     app.post('/api/campaigns/:id/execute', authMiddleware, async (c) => {

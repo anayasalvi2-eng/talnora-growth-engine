@@ -13,6 +13,16 @@ export interface User {
   createdAt: string;
   theme?: string;
 }
+export interface Item {
+  id: string;
+  userId: string;
+  title: string;
+  description?: string;
+  status: 'draft' | 'active' | 'archived';
+  metadata?: any;
+  createdAt: string;
+  updatedAt: string;
+}
 export interface Lead {
   id: string;
   email: string;
@@ -49,6 +59,16 @@ export interface Campaign {
   openCount: number;
   createdAt: string;
 }
+export interface Blog {
+  id: string;
+  userId: string;
+  title: string;
+  slug: string;
+  metaDescription?: string;
+  content: string;
+  status: 'draft' | 'published' | 'archived';
+  createdAt: string;
+}
 export interface AppEvent {
   id: string;
   eventType: string;
@@ -62,10 +82,10 @@ class ApiClient {
   private token: string | null = localStorage.getItem('auth_token');
   setToken(token: string | null) {
     this.token = token;
-    if (token) localStorage.setItem('auth_token', token);else
-    localStorage.removeItem('auth_token');
+    if (token) localStorage.setItem('auth_token', token);
+    else localStorage.removeItem('auth_token');
   }
-  isAuthenticated() {return !!this.token;}
+  isAuthenticated() { return !!this.token; }
   private async request<T>(method: string, path: string, body?: unknown): Promise<ApiResponse<T>> {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
@@ -94,13 +114,19 @@ class ApiClient {
     if (res.success && res.data?.token) this.setToken(res.data.token);
     return res;
   }
-  async logout() {this.setToken(null);return { success: true };}
-  async getCurrentUser() {return this.request<User>('GET', '/api/auth/me');}
-  async listContent(type?: string) {return this.request<ContentAsset[]>('GET', `/api/content${type ? `?type=${type}` : ''}`);}
-  async generateContent(type: string, topic: string) {return this.request<ContentAsset>('POST', '/api/content/generate', { type, topic });}
-  async listTopics() {return this.request<Topic[]>('GET', '/api/topics');}
-  async approveTopic(id: string, status: string) {return this.request<Topic>('PATCH', `/api/topics/${id}`, { status });}
-  async listLeads(status?: string) {return this.request<Lead[]>('GET', `/api/leads${status ? `?status=${status}` : ''}`);}
+  async logout() { this.setToken(null); return { success: true }; }
+  async getCurrentUser() { return this.request<User>('GET', '/api/auth/me'); }
+  async updateProfile(data: Partial<User>) { return this.request<User>('PUT', '/api/auth/me', data); }
+  async listItems(params?: any) { return this.request<Item[]>('GET', '/api/items'); }
+  async createItem(data: { title: string; status: string }) { return this.request<Item>('POST', '/api/items', data); }
+  async deleteItem(id: string) { return this.request<boolean>('DELETE', `/api/items/${id}`); }
+  async listContent(type?: string) { return this.request<ContentAsset[]>('GET', `/api/content${type ? `?type=${type}` : ''}`); }
+  async generateContent(type: string, topic: string) { return this.request<ContentAsset>('POST', '/api/content/generate', { type, topic }); }
+  async listBlogs() { return this.request<Blog[]>('GET', '/api/blogs'); }
+  async getBlogBySlug(slug: string) { return this.request<Blog>('GET', `/api/blogs/${slug}`); }
+  async listTopics() { return this.request<Topic[]>('GET', '/api/topics'); }
+  async approveTopic(id: string, status: string) { return this.request<Topic>('PATCH', `/api/topics/${id}`, { status }); }
+  async listLeads(status?: string) { return this.request<Lead[]>('GET', `/api/leads${status ? `?status=${status}` : ''}`); }
   async scoreResume(file: File, email: string) {
     const formData = new FormData();
     formData.append('resume', file);
@@ -112,12 +138,12 @@ class ApiClient {
       return { success: false, error: 'Network error during upload' };
     }
   }
-  async listCampaigns() {return this.request<Campaign[]>('GET', '/api/campaigns');}
-  async createCampaign(data: {name: string;template?: string;}) {return this.request<Campaign>('POST', '/api/campaigns', data);}
-  async executeCampaign(id: string) {return this.request<Campaign>('POST', `/api/campaigns/${id}/execute`);}
-  async deleteCampaign(id: string) {return this.request<boolean>('DELETE', `/api/campaigns/${id}`);}
-  async getLeadStats() {return this.request<Record<string, number>>('GET', '/api/leads/stats');}
-  async getRecentEvents() {return this.request<AppEvent[]>('GET', '/api/events/recent');}
-  async updateLeadStatus(id: string, status: string) {return this.request<Lead>('PATCH', `/api/leads/${id}`, { status });}
+  async listCampaigns() { return this.request<Campaign[]>('GET', '/api/campaigns'); }
+  async createCampaign(data: { name: string; template?: string; }) { return this.request<Campaign>('POST', '/api/campaigns', data); }
+  async executeCampaign(id: string) { return this.request<Campaign>('POST', `/api/campaigns/${id}/execute`); }
+  async deleteCampaign(id: string) { return this.request<boolean>('DELETE', `/api/campaigns/${id}`); }
+  async getLeadStats() { return this.request<Record<string, number>>('GET', '/api/leads/stats'); }
+  async getRecentEvents() { return this.request<AppEvent[]>('GET', '/api/events/recent'); }
+  async updateLeadStatus(id: string, status: string) { return this.request<Lead>('PATCH', `/api/leads/${id}`, { status }); }
 }
-export const api = new ApiClient();export const Item = { _stubComment: "This is a **STUB** export for 'Item', please implement it properly", _stubFor: "Item" };export const Blog = { _stubComment: "This is a **STUB** export for 'Blog', please implement it properly", _stubFor: "Blog" };
+export const api = new ApiClient();

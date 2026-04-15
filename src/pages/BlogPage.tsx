@@ -15,7 +15,7 @@ export function BlogPage() {
       if (!slug) return;
       setLoading(true);
       try {
-        const res = await api?.getBlogBySlug(slug);
+        const res = await api.getBlogBySlug(slug);
         if (res.success && res.data) {
           setBlog(res.data);
         }

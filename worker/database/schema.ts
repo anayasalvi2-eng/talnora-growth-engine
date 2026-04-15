@@ -120,14 +120,6 @@ export const emailLogs = sqliteTable('email_logs', {
   clicked: integer('clicked', { mode: 'boolean' }).default(false),
   timestamp: integer('timestamp', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`)
 });
-export const publishLogs = sqliteTable('publish_logs', {
-  id: text('id').primaryKey(),
-  contentId: text('content_id').references(() => contentAssets.id, { onDelete: 'cascade' }),
-  platform: text('platform').notNull(),
-  status: text('status', { enum: ['success', 'failed'] }).notNull(),
-  response: text('response'),
-  timestamp: integer('timestamp', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`)
-});
 export const blogs = sqliteTable('blogs', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
@@ -155,13 +147,16 @@ export const events = sqliteTable('events', {
   leadIdIdx: index('events_lead_id_idx').on(table.leadId)
 }));
 export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
 export type Session = typeof sessions.$inferSelect;
 export type Item = typeof items.$inferSelect;
+export type NewItem = typeof items.$inferInsert;
 export type Lead = typeof leads.$inferSelect;
+export type NewLead = typeof leads.$inferInsert;
 export type ContentAsset = typeof contentAssets.$inferSelect;
 export type Campaign = typeof campaigns.$inferSelect;
 export type Blog = typeof blogs.$inferSelect;
 export type Event = typeof events.$inferSelect;
 export type Topic = typeof topics.$inferSelect;
 export type EmailLog = typeof emailLogs.$inferSelect;
-export type PublishLog = typeof publishLogs.$inferSelect;export const NewItem = { _stubComment: "This is a **STUB** export for 'NewItem', please implement it properly", _stubFor: "NewItem" };export const NewLead = { _stubComment: "This is a **STUB** export for 'NewLead', please implement it properly", _stubFor: "NewLead" };export const NewUser = { _stubComment: "This is a **STUB** export for 'NewUser', please implement it properly", _stubFor: "NewUser" };
+export type PublishLog = typeof publishLogs.$inferSelect;
