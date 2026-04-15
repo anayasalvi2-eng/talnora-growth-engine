@@ -14,6 +14,9 @@ export class LeadService {
             id: generateId(),
             ...data,
         }).returning();
+        if (!lead) {
+            throw new Error('Failed to create lead: Insert operation returned no result.');
+        }
         return lead;
     }
     async list(options: ListLeadsOptions = {}): Promise<{ data: Lead[], total: number }> {
@@ -57,18 +60,17 @@ export class LeadService {
             archived: 0
         };
         results.forEach(row => {
-            if (row.status) {
+            if (row.status && row.status in stats) {
                 stats[row.status] = row.count;
             }
         });
-        // Calculate total accurately
-        stats.total = Object.values(stats).reduce((acc, curr) => acc + curr, 0) - stats.total;
-        stats.total = results.reduce((acc, curr) => acc + (curr.count || 0), 0);
+        const total = results.reduce((acc, curr) => acc + (curr.count || 0), 0);
+        stats.total = total;
         return stats;
     }
     async delete(id: string): Promise<boolean> {
         const result = await this.db.delete(leads).where(eq(leads.id, id));
-        return result.meta.changes > 0;
+        return (result.meta.changes ?? 0) > 0;
     }
 }
 export function createLeadService(db: Database): LeadService {

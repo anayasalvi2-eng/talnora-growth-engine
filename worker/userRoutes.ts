@@ -24,7 +24,7 @@ const authMiddleware = async (c: Context<AppEnv>, next: () => Promise<void>) => 
     c.set('session', result.session);
     await next();
 };
-export function userRoutes(app: Hono<any>) {
+export function userRoutes(app: Hono<AppEnv>) {
     app.post('/api/auth/register', async (c) => {
         const body = await c.req.json();
         const db = createDatabase(c.env.DB);
@@ -82,28 +82,33 @@ export function userRoutes(app: Hono<any>) {
     // Public Resume Score
     app.post('/api/public/score-resume', async (c) => {
         const formData = await c.req.formData();
-        const email = formData.get('email') as string;
-        const resume = formData.get('resume') as File;
-        if (!email || !resume) return c.json({ success: false, error: 'Email and resume required' }, 400);
+        const email = formData.get('email')?.toString();
+        const resume = formData.get('resume') as File | null;
+        if (!email || !resume) {
+            return c.json({ success: false, error: 'Email and resume required' }, 400);
+        }
         const db = createDatabase(c.env.DB);
         const leadService = createLeadService(db);
         const eventService = createEventService(db);
         const score = 70 + Math.floor(Math.random() * 25);
-        const lead = await leadService.create({
-            email,
-            name: email.split('@')[0],
-            source: 'resume-scorer',
-            resumeScore: score,
-            status: 'new',
-            metadata: { filename: resume.name }
-        });
-        // Trigger event-driven workflow
-        await eventService.logEvent({
-            leadId: lead.id,
-            eventType: 'resume_upload',
-            metadata: { score, filename: resume.name }
-        });
-        return c.json({ success: true, data: { score, feedback: ["Optimized formatting for ATS", "Recommended adding more hard skills"] } });
+        try {
+            const lead = await leadService.create({
+                email,
+                name: email.split('@')[0],
+                source: 'resume-scorer',
+                resumeScore: score,
+                status: 'new',
+                metadata: { filename: resume.name }
+            });
+            await eventService.logEvent({
+                leadId: lead.id,
+                eventType: 'resume_upload',
+                metadata: { score, filename: resume.name }
+            });
+            return c.json({ success: true, data: { score, feedback: ["Optimized formatting for ATS", "Recommended adding more hard skills"] } });
+        } catch (err) {
+            return c.json({ success: false, error: 'Failed to process lead capture' }, 500);
+        }
     });
     // Leads
     app.get('/api/leads', authMiddleware, async (c) => {

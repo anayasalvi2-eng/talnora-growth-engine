@@ -84,8 +84,8 @@ class ApiClient {
         body: body ? JSON.stringify(body) : undefined
       });
       if (!res.ok) {
-        const errorText = await res.text();
-        return { success: false, error: `Error ${res.status}: ${errorText || 'Request failed'}` };
+        const errorData = await res.json().catch(() => ({ error: 'Request failed' }));
+        return { success: false, error: errorData.error || `Error ${res.status}` };
       }
       return await res.json();
     } catch (e) {
@@ -112,8 +112,12 @@ class ApiClient {
     const formData = new FormData();
     formData.append('resume', file);
     formData.append('email', email);
-    const res = await fetch('/api/public/score-resume', { method: 'POST', body: formData });
-    return res.ok ? await res.json() : { success: false, error: 'Upload failed' };
+    try {
+      const res = await fetch('/api/public/score-resume', { method: 'POST', body: formData });
+      return res.ok ? await res.json() : { success: false, error: 'Upload failed' };
+    } catch (e) {
+      return { success: false, error: 'Network error during upload' };
+    }
   }
   async updateLeadStatus(id: string, status: string) { return this.request<Lead>('PATCH', `/api/leads/${id}`, { status }); }
   async getLeadStats() { return this.request<Record<string, number>>('GET', '/api/leads/stats'); }
@@ -123,7 +127,6 @@ class ApiClient {
   async listBlogs() { return this.request<Blog[]>('GET', '/api/blogs'); }
   async getBlogBySlug(slug: string) { return this.request<Blog>('GET', `/api/blogs/${slug}`); }
   async getRecentEvents() { return this.request<AppEvent[]>('GET', '/api/events/recent'); }
-  // Item methods for TemplateDemo
   async listItems(options?: any) { return this.request<Item[]>('GET', '/api/items'); }
   async createItem(data: any) { return this.request<Item>('POST', '/api/items', data); }
   async deleteItem(id: string) { return this.request<boolean>('DELETE', `/api/items/${id}`); }

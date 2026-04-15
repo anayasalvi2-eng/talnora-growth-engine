@@ -1,6 +1,6 @@
-import { desc, eq, and } from 'drizzle-orm';
+import { desc } from 'drizzle-orm';
 import type { Database } from '../index';
-import { events, type Event, type NewEvent } from '../schema';
+import { events, type Event } from '../schema';
 import { generateId } from '../../auth';
 export class EventService {
   constructor(private db: Database) {}
@@ -12,14 +12,16 @@ export class EventService {
       eventType: data.eventType,
       metadata: data.metadata || {},
     }).returning();
-    // Simulation of workflow triggers
+    if (!event) {
+        throw new Error('Failed to log event');
+    }
+    // Background workflow simulation
     this.triggerWorkflows(event);
     return event;
   }
   private triggerWorkflows(event: Event) {
     if (event.eventType === 'resume_upload') {
-      console.log(`[WORKFLOW] Triggered automation for resume_upload: Sending follow-up to lead ${event.leadId}`);
-      // In a real implementation, this would dispatch to Cloudflare Queues or a background worker
+      console.log(`[WORKFLOW] Triggered automation for resume_upload for lead ${event.leadId}`);
     }
   }
   async getRecentEvents(limit: number = 10): Promise<Event[]> {

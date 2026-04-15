@@ -1,6 +1,6 @@
 import { eq, and, desc, sql } from 'drizzle-orm';
 import type { Database } from '../index';
-import { campaigns, type Campaign, type NewCampaign } from '../schema';
+import { campaigns, type Campaign } from '../schema';
 import { generateId } from '../../auth';
 export interface ListCampaignOptions {
     limit?: number;
@@ -20,6 +20,9 @@ export class CampaignService {
             openCount: 0,
             metadata: data.metadata || {},
         }).returning();
+        if (!campaign) {
+            throw new Error('Failed to create campaign');
+        }
         return campaign;
     }
     async list(userId: string, options: ListCampaignOptions = {}): Promise<{ data: Campaign[], total: number }> {
@@ -50,7 +53,7 @@ export class CampaignService {
     async delete(id: string, userId: string): Promise<boolean> {
         const result = await this.db.delete(campaigns)
             .where(and(eq(campaigns.id, id), eq(campaigns.userId, userId)));
-        return result.meta.changes > 0;
+        return (result.meta.changes ?? 0) > 0;
     }
 }
 export function createCampaignService(db: Database): CampaignService {

@@ -1,6 +1,6 @@
 import { eq, and, desc, sql } from 'drizzle-orm';
 import type { Database } from '../index';
-import { contentAssets, type ContentAsset, type NewContentAsset } from '../schema';
+import { contentAssets, type ContentAsset } from '../schema';
 import { generateId } from '../../auth';
 export interface ListContentOptions {
     type?: ContentAsset['type'];
@@ -25,6 +25,9 @@ export class ContentService {
             status: 'draft',
             metadata: data.metadata || {},
         }).returning();
+        if (!asset) {
+            throw new Error('Failed to create content asset');
+        }
         return asset;
     }
     async list(userId: string, options: ListContentOptions = {}): Promise<{ data: ContentAsset[], total: number }> {
@@ -50,7 +53,7 @@ export class ContentService {
     async delete(id: string, userId: string): Promise<boolean> {
         const result = await this.db.delete(contentAssets)
             .where(and(eq(contentAssets.id, id), eq(contentAssets.userId, userId)));
-        return result.meta.changes > 0;
+        return (result.meta.changes ?? 0) > 0;
     }
 }
 export function createContentService(db: Database): ContentService {

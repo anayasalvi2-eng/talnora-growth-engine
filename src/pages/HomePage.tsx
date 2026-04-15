@@ -86,7 +86,7 @@ export function HomePage() {
             <CardHeader className="px-0 pt-0 pb-6">
               <CardTitle className="text-lg font-bold">Capture Velocity</CardTitle>
             </CardHeader>
-            <div className="h-[350px] w-full min-h-0">
+            <div className="h-[350px] w-full min-h-[350px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={MOCK_GRAPH_DATA}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
