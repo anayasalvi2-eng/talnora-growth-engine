@@ -13,6 +13,7 @@ import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import '@/index.css'
 import { HomePage } from '@/pages/HomePage'
 import { ContentStudioPage } from '@/pages/ContentStudioPage'
+import { LeadsPage } from '@/pages/LeadsPage'
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
   {
@@ -27,12 +28,12 @@ const router = createBrowserRouter([
   },
   {
     path: "/leads",
-    element: <div className="p-20 text-center">Leads CRM (Coming in Phase 2)</div>,
+    element: <LeadsPage />,
     errorElement: <RouteErrorBoundary />,
   },
   {
     path: "/campaigns",
-    element: <div className="p-20 text-center">Campaigns (Coming in Phase 4)</div>,
+    element: <div className="p-20 text-center text-muted-foreground">Campaigns & Outreach sequences coming soon.</div>,
     errorElement: <RouteErrorBoundary />,
   }
 ]);

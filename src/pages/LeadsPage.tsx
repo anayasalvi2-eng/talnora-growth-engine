@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -13,17 +13,17 @@ export function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
-  const loadLeads = useCallback(async () => {
+  useEffect(() => {
+    loadLeads();
+  }, [filterStatus]);
+  const loadLeads = async () => {
     setLoading(true);
     const res = await api.listLeads(filterStatus === 'all' ? undefined : filterStatus);
     if (res.success && res.data) {
       setLeads(res.data);
     }
     setLoading(false);
-  }, [filterStatus]);
-  useEffect(() => {
-    loadLeads();
-  }, [loadLeads]);
+  };
   const updateStatus = async (id: string, status: string) => {
     const res = await api.updateLeadStatus(id, status);
     if (res.success) {
@@ -124,7 +124,7 @@ export function LeadsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => updateStatus(lead.id, 'contacted')}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg">
                           <Mail className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-primary">

@@ -7,29 +7,14 @@ export interface ListLeadsOptions {
     limit?: number;
     offset?: number;
 }
-export type CreateLeadPayload = Omit<NewLead, 'id'> & { id?: string };
 export class LeadService {
     constructor(private db: Database) {}
-    async create(data: CreateLeadPayload): Promise<Lead> {
-        const insertData: NewLead = {
+    async create(data: Omit<NewLead, 'id'>): Promise<Lead> {
+        const [lead] = await this.db.insert(leads).values({
+            id: generateId(),
             ...data,
-            id: data.id || generateId()
-        } as NewLead;
-        const [lead] = await this.db.insert(leads).values(insertData).returning();
-        if (!lead) {
-            throw new Error('Failed to create lead');
-        }
+        }).returning();
         return lead;
-    }
-    async bulkCreate(data: CreateLeadPayload[]): Promise<Lead[]> {
-        if (data.length === 0) return [];
-        const results: Lead[] = [];
-        // Standard D1 batching via loop to ensure compatibility and stability
-        for (const item of data) {
-            const lead = await this.create(item);
-            results.push(lead);
-        }
-        return results;
     }
     async list(options: ListLeadsOptions = {}): Promise<{ data: Lead[], total: number }> {
         const { status, limit = 50, offset = 0 } = options;
@@ -51,7 +36,7 @@ export class LeadService {
             total: countResult[0]?.count || 0
         };
     }
-    async updateStatus(id: string, status: NonNullable<Lead['status']>): Promise<Lead | null> {
+    async updateStatus(id: string, status: Lead['status']): Promise<Lead | null> {
         const [lead] = await this.db.update(leads)
             .set({ status, updatedAt: new Date() })
             .where(eq(leads.id, id))
@@ -72,17 +57,16 @@ export class LeadService {
             archived: 0
         };
         results.forEach(row => {
-            if (row.status && row.status in stats) {
+            if (row.status) {
                 stats[row.status] = row.count;
+                stats.total += row.count;
             }
         });
-        const total = results.reduce((acc, curr) => acc + (curr.count || 0), 0);
-        stats.total = total;
         return stats;
     }
     async delete(id: string): Promise<boolean> {
         const result = await this.db.delete(leads).where(eq(leads.id, id));
-        return (result.meta.changes ?? 0) > 0;
+        return result.meta.changes > 0;
     }
 }
 export function createLeadService(db: Database): LeadService {

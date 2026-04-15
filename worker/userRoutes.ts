@@ -1,16 +1,15 @@
-import { Hono } from 'hono';
+import { Hono, Context } from 'hono';
 import { createDatabase } from './database';
 import { createUserService } from './database/services/user-service';
 import { createContentService } from './database/services/content-service';
+import { createLeadService } from './database/services/lead-service';
 import {
     createSession,
     validateSession,
-    revokeSession,
-    revokeAllSessions,
     extractBearerToken,
 } from './auth';
 import type { AppEnv } from './types/app-env';
-const authMiddleware = async (c: any, next: () => Promise<void>) => {
+const authMiddleware = async (c: Context<AppEnv>, next: () => Promise<void>) => {
     const token = extractBearerToken(c.req.raw);
     if (!token) return c.json({ success: false, error: 'Unauthorized' }, 401);
     const db = createDatabase(c.env.DB);
@@ -52,13 +51,30 @@ export function userRoutes(app: Hono<AppEnv>) {
         const body = await c.req.json();
         const db = createDatabase(c.env.DB);
         const contentService = createContentService(db);
-        // Mock OpenAI logic for MVP
-        const mockContent = `[AI Generated ${body.type.toUpperCase()}]\n\nTopic: ${body.topic}\n\nThis is a placeholder for high-quality marketing content generated for Talnora Growth Engine. In production, this would interface with OpenAI GPT-4o to provide tailored outreach material based on lead profiles and business goals.`;
+        const mockContent = `[AI Generated ${body.type.toUpperCase()}]\n\nTopic: ${body.topic}\n\nThis is placeholder content.`;
         const asset = await contentService.create(user.id, {
             type: body.type,
             topic: body.topic,
             content: mockContent
         });
         return c.json({ success: true, data: asset });
+    });
+    app.get('/api/leads', authMiddleware, async (c) => {
+        const db = createDatabase(c.env.DB);
+        const status = c.req.query('status') as any;
+        const result = await createLeadService(db).list({ status });
+        return c.json({ success: true, ...result });
+    });
+    app.patch('/api/leads/:id', authMiddleware, async (c) => {
+        const id = c.req.param('id');
+        const { status } = await c.req.json();
+        const db = createDatabase(c.env.DB);
+        const lead = await createLeadService(db).updateStatus(id, status);
+        return c.json({ success: true, data: lead });
+    });
+    app.get('/api/leads/stats', authMiddleware, async (c) => {
+        const db = createDatabase(c.env.DB);
+        const stats = await createLeadService(db).getStats();
+        return c.json({ success: true, data: stats });
     });
 }

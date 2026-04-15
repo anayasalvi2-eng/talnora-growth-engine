@@ -1,13 +1,10 @@
-/**
- * Local Hono environment type for the fullstack template.
- *
- * This stays local to the template so the shared Vite reference can remain
- * aligned with upstream VibeSDK.
- */
-
-export type { Env } from '../core-utils';
-
+import { Env as CoreEnv } from '../core-utils';
+import { User, Session } from '../database/schema';
+export type Env = CoreEnv;
 export type AppEnv = {
-  Bindings: import('../core-utils').Env;
-  Variables: Record<string, unknown>;
+  Bindings: Env;
+  Variables: {
+    user: User;
+    session: Session;
+  };
 };
