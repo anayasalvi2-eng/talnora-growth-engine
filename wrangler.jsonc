@@ -18,7 +18,7 @@
     {
       "binding": "DB",
       "database_name": "{{PROJECT_NAME}}-db",
-      "database_id": "{{D1_DATABASE_ID}}"
+      "database_id": "2753b978-4b82-4088-8780-0467569fe9a2"
     }
   ],
   // KV Namespace - Key-value storage for sessions, cache, etc.
