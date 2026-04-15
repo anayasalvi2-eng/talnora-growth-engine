@@ -1,0 +1,43 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "talnora-growth-engin-zzdoa91ibarz8avvlhrud",
+  "main": "worker/index.ts",
+  "compatibility_date": "2025-04-24",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  "assets": {
+    "directory": "dist/client",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  // D1 Database - Cloudflare's serverless SQL database
+  // Run `wrangler d1 create your-db-name` to create a database
+  // Then update the database_id below
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "{{PROJECT_NAME}}-db",
+      "database_id": "{{D1_DATABASE_ID}}"
+    }
+  ],
+  // KV Namespace - Key-value storage for sessions, cache, etc.
+  // Run `wrangler kv namespace create SESSIONS` to create
+  // Then update the id below
+  "kv_namespaces": [
+    {
+      "binding": "SESSIONS",
+      "id": "{{KV_SESSIONS_ID}}"
+    },
+    {
+      "binding": "CACHE",
+      "id": "{{KV_CACHE_ID}}"
+    }
+  ],
+  "vars": {
+    // JWT secret for session tokens - CHANGE THIS IN PRODUCTION
+    "JWT_SECRET": "change-this-to-a-secure-secret-in-production",
+    // Session TTL in seconds (default: 7 days)
+    "SESSION_TTL": "604800"
+  }
+}
