@@ -2,7 +2,7 @@
 
 A production-ready, batteries-included template for building fullstack applications on Cloudflare Workers. This template combines a modern frontend stack with a robust backend, database, and authentication system, all running on the Cloudflare developer platform.
 
-[cloudflarebutton]
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/anayasalvi2-eng/talnora-growth-engine)
 
 ## Key Features
 
@@ -121,7 +121,7 @@ This command will build the frontend application, then deploy both the static as
 
 Alternatively, you can use the one-click deploy button:
 
-[cloudflarebutton]
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/anayasalvi2-eng/talnora-growth-engine)
 
 ## Available Scripts
 
